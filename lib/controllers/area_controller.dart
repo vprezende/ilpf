@@ -114,7 +114,7 @@ class AreaController extends ChangeNotifier {
         bool success = false;
         bool error = false;
 
-        while(!(success && error)) {
+        while(!success && !error) {
 
           final response = await http.get(url);
 
