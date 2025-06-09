@@ -130,41 +130,46 @@ class _MapScreenState extends State<MapScreen> {
         context,
         message: 'Você precisa fechar a área atual antes de visualizar os dados'
       );
-    } else if (areaController.allAreas.isEmpty) {
+      return;
+    }
+
+    if (areaController.allAreas.isEmpty) {
       showErrorSnackBar(
         context,
         message: 'Nenhuma área fechada foi adicionada ainda'
       );
-    } else {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return const AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Carregando dados da área...'),
-              ],
-            ),
-          );
-        },
-      );
+      return;
+    }
 
-      await Future.delayed(Duration.zero);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Carregando dados da área...'),
+            ],
+          ),
+        );
+      },
+    );
 
-      if (!mounted) return;
+    await Future.delayed(Duration.zero);
+
+    if (mounted) {
 
       final data = await areaController.fetchAreaData(context);
 
-      if (!mounted) return;
+      if (mounted) {
+        Navigator.of(context).pop();
 
-      Navigator.of(context).pop();
+        String jsonStringApiData = jsonEncode(data);
 
-      String jsonStringApiData = jsonEncode(data);
-
-      showJsonDialog(context, jsonStringApiData);
+        showJsonDialog(context, jsonStringApiData);
+      }
     }
   }
 
@@ -239,7 +244,6 @@ class _MapScreenState extends State<MapScreen> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          
           FloatingActionButton(
             onPressed: () {
               setState(() {
@@ -249,27 +253,36 @@ class _MapScreenState extends State<MapScreen> {
             backgroundColor: isAddingPoints ? Colors.green : Colors.blue,
             child: Icon(isAddingPoints ? Icons.add_location_alt : Icons.add_location_alt_outlined,),
           ),
+
+          const SizedBox(height: 25),
+
           FloatingActionButton(
             onPressed: () {
               setState(() => areaController.closeArea(context));
             },
             child: const Icon(Icons.crop_square)
           ),
+
           const SizedBox(height: 25),
+
           FloatingActionButton(
             onPressed: () {
               setState(() => areaController.resetArea());
             },
             child: const Icon(Icons.delete)
           ),
+
           const SizedBox(height: 25),
+
           FloatingActionButton(
             onPressed: () {
               setState(() => areaController.undo());
             },
             child: const Icon(Icons.undo)
           ),
+
           const SizedBox(height: 25),
+
           FloatingActionButton(
             onPressed: showAllAreasAsJson,
             child: const Icon(Icons.info),
