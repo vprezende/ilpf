@@ -159,18 +159,17 @@ class _MapScreenState extends State<MapScreen> {
 
     await Future.delayed(Duration.zero);
 
-    if (mounted) {
+    if (!mounted) return;
 
-      final data = await areaController.fetchAreaData(context);
+    final data = await areaController.fetchAreaData(context);
 
-      if (mounted) {
-        Navigator.of(context).pop();
+    if (!mounted) return;
 
-        String jsonStringApiData = jsonEncode(data);
+    Navigator.of(context).pop();
 
-        showJsonDialog(context, jsonStringApiData);
-      }
-    }
+    String jsonStringApiData = jsonEncode(data);
+
+    showJsonDialog(context, jsonStringApiData);
   }
 
   @override
