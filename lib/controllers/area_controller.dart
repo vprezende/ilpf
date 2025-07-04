@@ -39,30 +39,30 @@ class AreaController extends ChangeNotifier {
 
   closeArea(BuildContext context) {
 
-    if (currentArea.length >= 3) {
-      // verifica se a área não foi fechada
-      // ou seja o primeiro ponto da lista é
-      // diferente do último
-      if (currentArea.first != currentArea.last) {
-
-        originalArea.add(currentArea);
-
-        currentArea = sort(currentArea);
-
-        // Fecha a área conectando o último ponto ao primeiro,
-        // garantindo que a área seja fechada visualmente e geometricamente.
-        currentArea.add(currentArea.first);
-
-        // Adiciona a área fechada à lista de áreas, Em Seguida, limpa
-        // a lista atual para permitir o desenho de uma nova área
-        areas.add(currentArea);
-        currentArea = [];
-      }
-    } else {
+    if (currentArea.length < 3) {
       showErrorSnackBar(
         context,
         message: 'Para fechar a área, adicione pelo menos 3 pontos'
       );
+    }
+
+    // verifica se a área não foi fechada
+    // ou seja o primeiro ponto da lista é
+    // diferente do último
+    if (currentArea.first != currentArea.last) {
+
+      originalArea.add(currentArea);
+
+      currentArea = sort(currentArea);
+
+      // Fecha a área conectando o último ponto ao primeiro,
+      // garantindo que a área seja fechada visualmente e geometricamente.
+      currentArea.add(currentArea.first);
+
+      // Adiciona a área fechada à lista de áreas, Em Seguida, limpa
+      // a lista atual para permitir o desenho de uma nova área
+      areas.add(currentArea);
+      currentArea = [];
     }
   }
 
@@ -75,10 +75,15 @@ class AreaController extends ChangeNotifier {
   void undo() {
     if (currentArea.isNotEmpty) {
       currentArea.removeLast();
-    } else {
-      areas.removeLast();
-      currentArea = originalArea.removeLast();
+      return;
     }
+
+    if (areas.isEmpty || originalArea.isEmpty) {
+      return;
+    }
+
+    areas.removeLast();
+    currentArea = originalArea.removeLast();
   }
 
   List<List<LatLng>> get allAreas => [...areas];
@@ -114,42 +119,33 @@ class AreaController extends ChangeNotifier {
 
           final response = await http.get(url);
 
-          if (response.statusCode == 200) {
-
-            data = jsonDecode(response.body);
-
-            data.remove('query_time_s');
-
-            success = true;
-
-          } else if (response.statusCode == 429) {
-
-            retryCount++;
-
-            final waitDuration = Duration(milliseconds: (200 * retryCount));
-
-            await Future.delayed(waitDuration);
-
-          } else {
-
-            if (!context.mounted) return {};
-
+          if (response.statusCode != 200 && context.mounted) {
             showErrorSnackBar(
               context,
               message: 'error: Status code ${response.statusCode}'
             );
-            
             error = true;
           }
+
+          if (response.statusCode == 429) {
+            retryCount++;
+            final waitDuration = Duration(milliseconds: (200 * retryCount));
+            await Future.delayed(waitDuration);
+          }
+
+          data = jsonDecode(response.body);
+
+          data.remove('query_time_s');
+
+          success = true;
         }
       } catch (e) {
-
-        if (!context.mounted) return {};
-
-        showErrorSnackBar(
-          context,
-          message: 'error: Status code ${e.toString()}'
-        );
+        if (context.mounted) {
+          showErrorSnackBar(
+            context,
+            message: 'error: Status code ${e.toString()}'
+          );
+        }
       }
       result['area_$areaIndex'] = data;
     }
