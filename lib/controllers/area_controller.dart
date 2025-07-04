@@ -75,6 +75,7 @@ class AreaController extends ChangeNotifier {
   void undo() {
     if (currentArea.isNotEmpty) {
       currentArea.removeLast();
+      return;
     }
 
     if (areas.isEmpty || originalArea.isEmpty) {
