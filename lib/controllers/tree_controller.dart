@@ -27,13 +27,13 @@ class TreeController extends ChangeNotifier {
     // calculando a altura referente a latitude e
     // longitude da área
 
-    final alturaLat = maxLat - minLat;
-    final alturaLng = maxLng - minLng;
+    final heightLat = maxLat - minLat;
+    final heightLng = maxLng - minLng;
 
     // gerando uma variação aleatória da latitude e longitude
 
-    final deltaLat = random.nextDouble() * alturaLat;
-    final deltaLng = random.nextDouble() * alturaLng;
+    final deltaLat = random.nextDouble() * heightLat;
+    final deltaLng = random.nextDouble() * heightLng;
 
     // latitude e logintude finais dentro dos limites da área
 
