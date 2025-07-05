@@ -127,7 +127,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         ),
                         if (value == 'rank') ...[
                           const Padding(
-                            padding: EdgeInsets.only(left: 15, right: 10),
+                            padding: EdgeInsets.symmetric(horizontal: 15),
                             child: Text(
                               'Lados:',
                               style: TextStyle(
@@ -139,9 +139,12 @@ class _AppDrawerState extends State<AppDrawer> {
                             flex: 1,
                             child: TextField(
                               controller: sidesController,
+                              cursorColor: Colors.black.withValues(alpha: 0.35),
+                              cursorRadius: const Radius.circular(8),
+                              cursorWidth: 3,
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(3)
+                                LengthLimitingTextInputFormatter(2)
                               ],
                               decoration: InputDecoration(
                                 filled: true,
