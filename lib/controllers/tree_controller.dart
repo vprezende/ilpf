@@ -5,9 +5,59 @@ import 'package:ilpf/controllers/area_controller.dart';
 class TreeController extends ChangeNotifier {
 
   final AreaController areaController;
+
   List<LatLng> treeMarkers = [];
+  List<List<LatLng>> ranks = [];
 
   TreeController({required this.areaController});
+
+  void addRankTreeToArea(int areaIndex, int totalTrees, int sides) {
+    final allAreas = this.areaController.allAreas;
+    final area = allAreas[areaIndex];
+
+    final treesPerSide = totalTrees ~/ sides;
+
+    for (int i = 0; i < sides; i++) {
+      final startPoint = area[i];
+      final endPoint = area[(i + 1) % sides]; // Último ponto conecta com o primeiro
+
+      for (int j = 0; j < treesPerSide; j++) {
+        double progress = j / treesPerSide;
+
+        // Calcula a variação da latitude entre o ponto inicial e final do lado
+        final deltaLat = endPoint.latitude - startPoint.latitude;
+
+        // Calcula a variação da longitude entre o ponto inicial e final do lado
+        final deltaLng = endPoint.longitude - startPoint.longitude;
+
+        // Cálculo da variação proporcional da latitude com base no progresso ao longo do lado (0.0 até 1.0)
+
+        double deltaLatProgress = deltaLat * progress;
+
+        // Cálculo da variação proporcional da longitude com base no progresso ao longo do lado (0.0 até 1.0)
+
+        double deltaLngProgress = deltaLng * progress;
+
+        // Latitude final da árvore posicionada ao longo do lado
+
+        final lat = startPoint.latitude + deltaLatProgress;
+
+        // Longitude final da árvore posicionada ao longo do lado
+
+        final lng = startPoint.longitude + deltaLngProgress;
+
+        // Cria um novo ponto (LatLng) na posição calculada
+        final point = LatLng(lat, lng);
+
+        treeMarkers.add(point);
+      }
+    }
+
+    ranks.add(treeMarkers);
+
+    notifyListeners();
+  }
+
 
   void addTreeToArea(int areaIndex) {
 
@@ -24,23 +74,17 @@ class TreeController extends ChangeNotifier {
 
     final random = Random();
 
-    // calculando a altura referente a latitude e
-    // longitude da área
+    // Calculando a variação da latitude e longitude da área
 
-    final heightLat = maxLat - minLat;
-    final heightLng = maxLng - minLng;
+    final deltaLat = maxLat - minLat;
+    final deltaLng = maxLng - minLng;
 
-    // gerando uma variação aleatória da latitude e longitude
+    // Gera coordenadas aleatórias dentro do retângulo delimitador da área
 
-    final deltaLat = random.nextDouble() * heightLat;
-    final deltaLng = random.nextDouble() * heightLng;
+    final lat = minLat + (random.nextDouble() * deltaLat);
+    final lng = minLng + (random.nextDouble() * deltaLng);
 
-    // latitude e logintude finais dentro dos limites da área
-
-    final lat = minLat + deltaLat;
-    final lng = minLng + deltaLng;
-
-    // gerando o ponto dentro dos limites da área
+    // Gerando o ponto dentro dos limites da área
 
     final point = LatLng(lat, lng);
 

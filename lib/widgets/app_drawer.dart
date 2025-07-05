@@ -6,6 +6,10 @@ import 'package:ilpf/controllers/tree_controller.dart';
 
 import '../controllers/area_controller.dart';
 
+import 'package:flutter/services.dart';
+
+import 'app_snackbars.dart';
+
 class AppDrawer extends StatefulWidget {
 
   final int treeCounter;
@@ -30,13 +34,15 @@ class _AppDrawerState extends State<AppDrawer> {
 
   late AreaController areaController;
   late TreeController treeController;
+  late TextEditingController sidesController;
 
-  int selectedAreaIndex = 0;
+  int selectedAreaIndex = -1;
 
   @override
   void initState() {
     super.initState();
     treeCounter = widget.treeCounter;
+    sidesController = TextEditingController();
   }
 
   @override
@@ -44,6 +50,16 @@ class _AppDrawerState extends State<AppDrawer> {
     super.didChangeDependencies();
     treeController = Provider.of<TreeController>(context);
     areaController = treeController.areaController;
+
+    if (areaController.allAreas.length == 1 && selectedAreaIndex == -1) {
+      selectedAreaIndex = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    sidesController.dispose();
   }
 
   @override
@@ -62,47 +78,84 @@ class _AppDrawerState extends State<AppDrawer> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    DropdownButtonFormField2<int>(
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        filled: true,
-                        iconColor: Colors.grey,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none
-                        ),
-                      ),
-                      dropdownStyleData: DropdownStyleData(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      menuItemStyleData:MenuItemStyleData(
-                        overlayColor: WidgetStateProperty.all(Colors.grey.shade300),
-                      ),
-                      value: selectedAreaIndex,
-                      hint: Center(
-                        child: Text(
-                          'Selecione uma área',
-                          style: TextStyle(
-                            color: Colors.grey.shade500
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: DropdownButtonFormField2<int>(
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              filled: true,
+                              iconColor: Colors.grey,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none
+                              ),
+                            ),
+                            dropdownStyleData: DropdownStyleData(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            menuItemStyleData:MenuItemStyleData(
+                              overlayColor: WidgetStateProperty.all(Colors.grey.shade300),
+                            ),
+                            value: selectedAreaIndex == -1 ? null : selectedAreaIndex,
+                            hint: Center(
+                              child: Text(
+                                'Selecione uma área',
+                                style: TextStyle(
+                                  color: Colors.grey.shade500
+                                ),
+                              )
+                            ),
+                            items: List.generate(areaController.allAreas.length, (index) {
+                              return DropdownMenuItem(
+                                value: index,
+                                child: Center(
+                                  child: Text(
+                                    'area_${index + 1}'
+                                  ),
+                                ),
+                              );
+                            }),
+                            onChanged: (index) {
+                              setState(() => selectedAreaIndex = index!);
+                            },
                           ),
-                        )
-                      ),
-                      items: List.generate(areaController.areas.length, (index) {
-                        return DropdownMenuItem(
-                          value: index,
-                          child: Center(
+                        ),
+                        if (value == 'rank') ...[
+                          const Padding(
+                            padding: EdgeInsets.only(left: 15, right: 10),
                             child: Text(
-                              'area_${index + 1}'
+                              'Lados:',
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        );
-                      }),
-                      onChanged: (index) {
-                        setState(() => selectedAreaIndex = index!);
-                      },
+                          Expanded(
+                            flex: 1,
+                            child: TextField(
+                              controller: sidesController,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(3)
+                              ],
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                            ),
+                          )
+                        ]
+                      ]
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -194,7 +247,36 @@ class _AppDrawerState extends State<AppDrawer> {
                         overlayColor: WidgetStatePropertyAll(Colors.transparent.withValues(alpha: 0.05))
                       ),
                       onPressed: () {
-                        treeController.addTreeToArea(selectedAreaIndex);
+                        if (selectedAreaIndex == -1) {
+                          showErrorSnackBar(
+                            context,
+                            message: 'Por favor! escolha uma área'
+                          );
+                          return;
+                        }
+
+                        final text = sidesController.text;
+                        final sides = int.tryParse(text) ?? 0;
+
+                        final treesRemainder = treeCounter % sides;
+
+                        if (treesRemainder != 0) {
+                          showWarningSnackBar(
+                            context,
+                            message: 'A quantidade de árvores não é suficiente para construir o rank'
+                          );
+                          return;
+                        }
+
+                        if (sides < 3) {
+                          showErrorSnackBar(
+                            context,
+                            message: 'Adicione pelo menos 3 pontos'
+                          );
+                          return;
+                        }
+
+                        treeController.addRankTreeToArea(selectedAreaIndex, treeCounter, sides);
                       }
                     )
                   ]
