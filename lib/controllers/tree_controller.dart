@@ -12,16 +12,22 @@ class TreeController extends ChangeNotifier {
   TreeController({required this.areaController});
 
   void addRankTreeToArea(int areaIndex, int totalTrees, int sides) {
+
     final allAreas = this.areaController.allAreas;
+
     final area = allAreas[areaIndex];
 
     final treesPerSide = totalTrees ~/ sides;
 
+    // Pecorre os lados da área
     for (int i = 0; i < sides; i++) {
-      final startPoint = area[i];
-      final endPoint = area[(i + 1) % sides]; // Último ponto conecta com o primeiro
 
+      final startPoint = area[i];
+      final endPoint = area[(i + 1) % sides]; // Fecha a área conectando (último → primeiro)
+
+      // Colocando as árvores ao longo dos lados
       for (int j = 0; j < treesPerSide; j++) {
+
         double progress = j / treesPerSide;
 
         // Calcula a variação da latitude entre o ponto inicial e final do lado

@@ -47,11 +47,15 @@ class _AppDrawerState extends State<AppDrawer> {
 
   @override
   void didChangeDependencies() {
+
     super.didChangeDependencies();
+
     treeController = Provider.of<TreeController>(context);
     areaController = treeController.areaController;
 
-    if (areaController.allAreas.length == 1 && selectedAreaIndex == -1) {
+    final areas = areaController.allAreas.length;
+
+    if (areas == 1) {
       selectedAreaIndex = 0;
     }
   }
@@ -249,12 +253,19 @@ class _AppDrawerState extends State<AppDrawer> {
                       style: ButtonStyle(
                         overlayColor: WidgetStatePropertyAll(Colors.transparent.withValues(alpha: 0.05))
                       ),
+
                       onPressed: () {
+
                         if (selectedAreaIndex == -1) {
                           showErrorSnackBar(
                             context,
-                            message: 'Por favor! escolha uma área'
+                            message: 'Por favor! Crie uma área primeiro'
                           );
+                          return;
+                        }
+
+                        if (value != 'rank') {
+                          treeController.addTreeToArea(selectedAreaIndex);
                           return;
                         }
 
