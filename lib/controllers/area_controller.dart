@@ -7,10 +7,11 @@ import 'package:ilpf/widgets/app_snackbars.dart';
 
 class AreaController extends ChangeNotifier {
 
-  List<List<LatLng>> areas = [];
+  final List<List<LatLng>> _areas = [];
+
   List<LatLng> currentArea = [];
 
-  final List<List<LatLng>> originalArea = [];
+  final List<List<LatLng>> _originalArea = [];
 
   addPoint(LatLng point) {
     currentArea.add(point);
@@ -49,9 +50,9 @@ class AreaController extends ChangeNotifier {
     // verifica se a área não foi fechada
     // ou seja o primeiro ponto da lista é
     // diferente do último
-    if (currentArea.first != currentArea.last) {
+    if (currentArea.first !=  currentArea.last) {
 
-      originalArea.add(currentArea);
+      this._originalArea.add(currentArea);
 
       currentArea = sort(currentArea);
 
@@ -61,31 +62,32 @@ class AreaController extends ChangeNotifier {
 
       // Adiciona a área fechada à lista de áreas, Em Seguida, limpa
       // a lista atual para permitir o desenho de uma nova área
-      areas.add(currentArea);
+      this._areas.add(currentArea);
       currentArea = [];
     }
   }
 
   void resetArea() {
-    areas.clear();
+    this._areas.clear();
     currentArea.clear();
-    originalArea.clear();
+    this._originalArea.clear();
   }
 
   void undo() {
     if (currentArea.isNotEmpty) {
       currentArea.removeLast();
-    }
-
-    if (areas.isEmpty || originalArea.isEmpty) {
       return;
     }
 
-    areas.removeLast();
-    currentArea = originalArea.removeLast();
+    if (this._areas.isEmpty || this._originalArea.isEmpty) {
+      return;
+    }
+
+    this._areas.removeLast();
+    currentArea = this._originalArea.removeLast();
   }
 
-  List<List<LatLng>> get allAreas => [...areas];
+  List<List<LatLng>> get allAreas => [...this._areas];
 
   Future<Map<String, dynamic>> fetchAreaData(BuildContext context) async {
 
